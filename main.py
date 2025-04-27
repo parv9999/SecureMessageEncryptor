@@ -1,7 +1,8 @@
 import streamlit as st
 from encryption import generate_key, encrypt_message, decrypt_message
 from qr_generator import generate_qr
-import cv2
+from PIL import Image
+import pyzxing  # Install pyzxing: pip install pyzxing
 import os
 
 st.title("🔒 Secure Message Encryptor")
@@ -12,19 +13,18 @@ choice = st.sidebar.selectbox("Menu", menu)
 # Hardcoded password for decryption (you can change this)
 DECRYPTION_PASSWORD = "1234"
 
-# Function to read QR from uploaded image using OpenCV (no pyzbar)
 def read_qr_from_image(uploaded_file):
     # Save uploaded file temporarily
     temp_file_path = "temp_uploaded_qr.png"
     with open(temp_file_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
 
-    img = cv2.imread(temp_file_path)
-    detector = cv2.QRCodeDetector()
-    data, bbox, _ = detector.detectAndDecode(img)
+    img = Image.open(temp_file_path)
+    zx = pyzxing.BarCodeReader()
+    result = zx.decode(temp_file_path)
     
-    if bbox is not None and data:
-        return data
+    if result:
+        return result[0]['parsed']  # Returns the decoded QR data
     else:
         return None
 
